@@ -134,6 +134,7 @@ for (String s : lines) {
         Ledger.candidate(this, name, "visible loot (unverified)");
     }
 }
+ }
  @Override public void onDestroy(){
   if(display!=null)display.release();
   if(reader!=null)reader.close();

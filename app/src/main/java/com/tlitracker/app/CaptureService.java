@@ -115,7 +115,7 @@ public class CaptureService extends Service {
   
 if (!"live".equals(mode)) return;
 for(String s:lines){
-if (!s.matches("(?i).*(memory of|outerwear|starshard|flame elementium|divinity slate|legendary|gear|beacon|compass).*")) continue;
+if (s.length() < 4) continue;
   if(recent.add(s))
     Ledger.candidate(this,s,"live OCR (unverified)");
  }

@@ -1,0 +1,4 @@
+plugins { id 'com.android.application' }
+android { namespace 'com.tlitracker.app'; compileSdk 35
+ defaultConfig { applicationId 'com.tlitracker.app'; minSdk 29; targetSdk 34; versionCode 1; versionName '0.1' } }
+dependencies { implementation 'com.google.mlkit:text-recognition:16.0.1' }

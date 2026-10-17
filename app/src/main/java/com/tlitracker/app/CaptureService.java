@@ -114,12 +114,26 @@ public class CaptureService extends Service {
   }
   
 if (!"live".equals(mode)) return;
-for(String s:lines){
-if (s.length() < 4) continue;
-  if(recent.add(s))
-    Ledger.candidate(this,s,"live OCR (unverified)");
- }
- }
+for (String s : lines) {
+    String name = s.trim();
+    String lower = name.toLowerCase(java.util.Locale.ROOT);
+
+    boolean loot = lower.contains("beacon")
+        || lower.contains("flame sand")
+        || lower.contains("winding key")
+        || lower.contains("memory of")
+        || lower.contains("outerwear")
+        || lower.contains("starshard");
+
+    boolean unwanted = lower.contains("[world]")
+        || lower.contains("life:")
+        || lower.contains("energy shield")
+        || lower.contains("fps");
+
+    if (loot && !unwanted && recent.add(name)) {
+        Ledger.candidate(this, name, "visible loot (unverified)");
+    }
+}
  @Override public void onDestroy(){
   if(display!=null)display.release();
   if(reader!=null)reader.close();

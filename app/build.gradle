@@ -3,9 +3,15 @@ plugins {
     id 'com.android.application'
 }
 
+    
 android {
     namespace 'com.tlitracker.app'
     compileSdk 35
+
+    buildFeatures {
+        aidl true
+    }
+
 
     defaultConfig {
         applicationId 'com.tlitracker.app'

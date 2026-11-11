@@ -3,6 +3,9 @@ package com.tlitracker.app;
 
 import android.app.Activity;
 import rikka.shizuku.Shizuku;
+import android.content.ComponentName;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
@@ -20,6 +23,42 @@ public class MainActivity extends Activity {
     private static final int CAPTURE_REQUEST = 100;
     private String selectedMode = "live";
     private LinearLayout layout;
+    
+private ILogReader logReader;
+
+private final ServiceConnection logConnection =
+    new ServiceConnection() {
+        @Override
+        public void onServiceConnected(
+                ComponentName name, IBinder binder) {
+            logReader = ILogReader.Stub.asInterface(binder);
+
+            new Thread(() -> {
+                String result;
+                try {
+                    result = logReader.checkLog();
+                } catch (Exception e) {
+                    result = "Log test failed: " + e.getMessage();
+                }
+
+                final String message = result;
+                runOnUiThread(() ->
+                    new android.app.AlertDialog.Builder(
+                        MainActivity.this)
+                        .setTitle("Torchlight Log Test")
+                        .setMessage(message)
+                        .setPositiveButton("OK", null)
+                        .show()
+                );
+            }).start();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            logReader = null;
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +96,41 @@ shizukuButton.setOnClickListener(v -> {
     }
 });
 layout.addView(shizukuButton);
+        
+Button testLogButton = new Button(this);
+testLogButton.setText("Test Game Log Access");
+
+testLogButton.setOnClickListener(v -> {
+    if (!Shizuku.pingBinder()) {
+        new android.app.AlertDialog.Builder(this)
+            .setMessage("Start Shizuku first.")
+            .setPositiveButton("OK", null)
+            .show();
+        return;
+    }
+
+    if (Shizuku.checkSelfPermission()
+            != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        new android.app.AlertDialog.Builder(this)
+            .setMessage("Grant Shizuku permission first.")
+            .setPositiveButton("OK", null)
+            .show();
+        return;
+    }
+
+    Shizuku.UserServiceArgs args =
+        new Shizuku.UserServiceArgs(
+            new ComponentName(this, LogReaderService.class))
+            .daemon(false)
+            .processNameSuffix("log_reader")
+            .debuggable(true)
+            .version(1);
+
+    Shizuku.bindUserService(args, logConnection);
+});
+
+layout.addView(testLogButton);
+
         addCaptureButton("Start Loot Scanner", "live");
         addCaptureButton("Save Inventory Baseline", "baseline");
         addCaptureButton("Compare Inventory", "compare");

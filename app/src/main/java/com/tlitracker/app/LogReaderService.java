@@ -29,7 +29,10 @@ public class LogReaderService extends ILogReader.Stub {
         return "Game log accessible!\n"
             + "Size: " + file.length() + " bytes";
     }
-
+@Override
+public String scanLog() {
+    return "Game log scanner connected. Ready to scan.";
+}
     public void destroy() {
         // Called when Shizuku stops this UserService.
     }

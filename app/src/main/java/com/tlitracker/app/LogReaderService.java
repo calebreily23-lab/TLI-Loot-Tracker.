@@ -30,7 +30,6 @@ public class LogReaderService extends ILogReader.Stub {
             + "Size: " + file.length() + " bytes";
     }
 
-    @Override
     public void destroy() {
         // Called when Shizuku stops this UserService.
     }

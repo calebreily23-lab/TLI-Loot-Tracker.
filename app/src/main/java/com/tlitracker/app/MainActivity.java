@@ -2,6 +2,7 @@
 package com.tlitracker.app;
 
 import android.app.Activity;
+import rikka.shizuku.Shizuku;
 import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
@@ -34,6 +35,28 @@ public class MainActivity extends Activity {
         title.setTextSize(22);
         layout.addView(title);
 
+        Button shizukuButton = new Button(this);
+shizukuButton.setText("Connect Shizuku");
+shizukuButton.setOnClickListener(v -> {
+    if (!Shizuku.pingBinder()) {
+        new android.app.AlertDialog.Builder(this)
+            .setMessage("Shizuku is not running. Start it first.")
+            .setPositiveButton("OK", null)
+            .show();
+        return;
+    }
+
+    if (Shizuku.checkSelfPermission()
+            == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        new android.app.AlertDialog.Builder(this)
+            .setMessage("Shizuku permission already granted.")
+            .setPositiveButton("OK", null)
+            .show();
+    } else {
+        Shizuku.requestPermission(1001);
+    }
+});
+layout.addView(shizukuButton);
         addCaptureButton("Start Loot Scanner", "live");
         addCaptureButton("Save Inventory Baseline", "baseline");
         addCaptureButton("Compare Inventory", "compare");

@@ -36,7 +36,7 @@ private final ServiceConnection logConnection =
             new Thread(() -> {
                 String result;
                 try {
-                    result = logReader.checkLog();
+                    result = logReader.scanLog();
                 } catch (Exception e) {
                     result = "Log test failed: " + e.getMessage();
                 }
@@ -45,7 +45,7 @@ private final ServiceConnection logConnection =
                 runOnUiThread(() ->
                     new android.app.AlertDialog.Builder(
                         MainActivity.this)
-                        .setTitle("Torchlight Log Test")
+                        .setTitle("Torchlight Log Scan")
                         .setMessage(message)
                         .setPositiveButton("OK", null)
                         .show()
@@ -98,7 +98,7 @@ shizukuButton.setOnClickListener(v -> {
 layout.addView(shizukuButton);
         
 Button testLogButton = new Button(this);
-testLogButton.setText("Test Game Log Access");
+testLogButton.setText("Scan Game Log");
 
 testLogButton.setOnClickListener(v -> {
     if (!Shizuku.pingBinder()) {

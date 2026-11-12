@@ -31,6 +31,7 @@ public class LogReaderService extends ILogReader.Stub {
     }
 
 
+
 @Override
 public String scanLog() {
     String path =
@@ -43,11 +44,20 @@ public String scanLog() {
         return "Cannot read game log.";
     }
 
-    StringBuilder recent = new StringBuilder();
-    java.util.ArrayDeque<String> lastLines =
-        new java.util.ArrayDeque<>();
+    String[] keywords = {
+        "pickup", "pick up", "loot", "drop",
+        "item", "inventory", "bag", "currency",
+        "reward", "flame", "resonance",
+        "collect", "obtain", "gain"
+    };
 
+    int[] counts = new int[keywords.length];
     int totalLines = 0;
+    int matchingLines = 0;
+    int filteredLines = 0;
+
+    java.util.ArrayDeque<String> samples =
+        new java.util.ArrayDeque<>();
 
     try (java.io.BufferedReader reader =
              new java.io.BufferedReader(
@@ -58,41 +68,86 @@ public String scanLog() {
         while ((line = reader.readLine()) != null) {
             totalLines++;
 
-            if (!line.trim().isEmpty()) {
-                // Keep only the newest 30 nonempty lines.
-                if (lastLines.size() >= 30) {
-                    lastLines.removeFirst();
+            String lower = line.toLowerCase(
+                java.util.Locale.ROOT);
+
+            // Exclude repetitive asset and font loading.
+            if (lower.contains("assetload")
+                    || lower.contains("font_load")
+                    || lower.contains("loadwidgetbybpname")) {
+                filteredLines++;
+                continue;
+            }
+
+            boolean matched = false;
+
+            for (int i = 0; i < keywords.length; i++) {
+                if (lower.contains(keywords[i])) {
+                    counts[i]++;
+                    matched = true;
+                }
+            }
+
+            if (matched) {
+                matchingLines++;
+
+                // Keep the latest 20 matching entries.
+                if (samples.size() >= 20) {
+                    samples.removeFirst();
                 }
 
-                // Limit each line so the popup stays manageable.
-                lastLines.addLast(
-                    line.length() > 250
-                        ? line.substring(0, 250)
+                samples.addLast(
+                    line.length() > 300
+                        ? line.substring(0, 300)
                         : line
                 );
             }
         }
 
-        for (String recentLine : lastLines) {
-            recent.append(recentLine).append("\n");
+        StringBuilder result = new StringBuilder();
+
+        result.append("Log size: ")
+            .append(file.length())
+            .append(" bytes\n");
+
+        result.append("Total lines: ")
+            .append(totalLines)
+            .append("\n");
+
+        result.append("Filtered lines: ")
+            .append(filteredLines)
+            .append("\n");
+
+        result.append("Matching lines: ")
+            .append(matchingLines)
+            .append("\n\n");
+
+        result.append("KEYWORD COUNTS:\n");
+
+        for (int i = 0; i < keywords.length; i++) {
+            result.append(keywords[i])
+                .append(": ")
+                .append(counts[i])
+                .append("\n");
         }
 
-        String modified =
-            new java.text.SimpleDateFormat(
-                "yyyy-MM-dd HH:mm:ss",
-                java.util.Locale.US
-            ).format(new java.util.Date(file.lastModified()));
+        result.append("\nLATEST 20 MATCHES:\n");
 
-        return "Log size: " + file.length() + " bytes"
-            + "\nLast modified: " + modified
-            + "\nTotal lines: " + totalLines
-            + "\n\nNewest 30 nonempty lines:\n"
-            + recent.toString();
+        for (String sample : samples) {
+            result.append(sample).append("\n");
+        }
+
+        if (samples.isEmpty()) {
+            result.append("No matching entries found.");
+        }
+
+        return result.toString();
 
     } catch (Exception e) {
         return "Log scan error: " + e.getMessage();
     }
 }
+
 
     public void destroy() {
         // Called when Shizuku stops this UserService.
